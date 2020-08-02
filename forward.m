@@ -1,19 +1,13 @@
-function [o, ht, zt, zt_saved, ht_prev, ht_saved] = forward(x, Wih, Whh, ht_prev, o,ht_saved,zt_saved,Who, K)
+function [o, ht, zt] = forward(x, Wih, Whh, Who, ht, zt, o, K)
     
     
 
 
-    zt = Wih*x(K) + Whh*ht_prev;
+    zt = [zt, Wih*x(K) + Whh*ht(:,K)];
 
-    zt_saved = [zt_saved zt];
+    ht = [ht tanh(zt(:,K))];
 
-    ht = tanh(zt);
-
-    ht_saved = [ht_saved ht];
-    
-    ht_prev = ht;
-
-    o = [o; Who*ht];
+    o = [o; Who*ht(:,K+1)];
     
 
 
