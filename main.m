@@ -6,7 +6,6 @@ clc;
 % networks (RNNs) in univariate and
 % multivariate time series
 
-% Frantzeska Lavda
 
 load henondata x;
 
@@ -43,9 +42,8 @@ q = 1;
 tau = 4; % tBPTT constant for unfolding
 
 alpha = 0.01;
-EpochMax = 5000;
 
-ht_prev = zeros(hidden_units,1);
+
 Whh = rand(hidden_units,hidden_units);
 Wih = rand(hidden_units,d);
 Who = rand(q,hidden_units);
@@ -53,18 +51,25 @@ Who = rand(q,hidden_units);
 MAX_EPOCH = 5000;
 
 
-o = [];
-zt_saved = [];
-ht_saved = ht_prev;
 
-for K = 1:num_trdata-1
 
-    [o, ht, zt, zt_saved, ht_prev, ht_saved] = forward(train_in, Wih, Whh, ht_prev, o,ht_saved,zt_saved,Who,K);
 
-    
+EPOCH = 0;
+
+while EPOCH <= 1
+    o = [];
+    zt = [];
+    ht = zeros(hidden_units, 1);
+    count = 0;
+    for K = 1:100
+
+        [o, ht, zt] = forward(train_in, Wih, Whh, Who, ht, zt, o, K); 
+                   
+        [dWih, dWhh, dWho, del_t] = backprop(Wih, Whh, Who, ht, zt, o, train_out, train_in, K);
+
+    end
+    EPOCH = EPOCH + 1;
 end
-
-
 
 
 
