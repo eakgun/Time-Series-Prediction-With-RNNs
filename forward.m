@@ -7,7 +7,7 @@ function [o, ht, zt] = forward(x, Wih, Whh, Who, ht, zt, o, K)
 
     ht = [ht tanh(zt(:,K))];
 
-    o = [o; Who*ht(:,K+1)];
+    o = [o; sigmoid(Who*ht(:,K+1))];
     
 
 

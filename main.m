@@ -6,38 +6,39 @@ clc;
 % networks (RNNs) in univariate and
 % multivariate time series
 
+%THE PROBLEM IS THE VANISHING GRADIENT!
 
 %x_test_in ve x_test_out halledilicek.
 
 
-t = [1:0.1:100];
-LengthOfTimeSeries = length(t);
-NumberOfInputs = 1;
-PredictHorizon = 100;
-x = sin(t);
-Z = x;
-Zmin = min(Z); Zmax = max(Z);
-
-x = (x - [ones(size(x, 1), 1) * Zmin]) ./ ([ones(size(x, 1), 1) * Zmax] - [ones(size(x, 1), 1) * Zmin]);
-
-
-% load henondata x;
-% Z = x;
+% t = [1:0.1:100];
 % NumberOfInputs = 1;
-% LengthOfTimeSeries =900;
 % PredictHorizon = 50;
-% lambda = 0.0;
+% LengthOfTimeSeries = length(t) - PredictHorizon;
+% x = sin(t);
+
 % Z = x;
 % Zmin = min(Z); Zmax = max(Z);
-% data = (x - [ones(size(x, 1), 1) * Zmin]) ./ ([ones(size(x, 1), 1) * Zmax] - [ones(size(x, 1), 1) * Zmin]);
-% x = data(1:LengthOfTimeSeries);
+
+% x = (x - [ones(size(x, 1), 1) * Zmin]) ./ ([ones(size(x, 1), 1) * Zmax] - [ones(size(x, 1), 1) * Zmin]);
+% x_test = x(LengthOfTimeSeries + 1:LengthOfTimeSeries + PredictHorizon);
+
+load henondata x;
+NumberOfInputs = 1;
+LengthOfTimeSeries =1001;
+PredictHorizon = 50;
+data = x(1:LengthOfTimeSeries);
+lambda = 0.0;
+Z = x;
+Zmin = min(Z); Zmax = max(Z);
+data = (x - [ones(size(x, 1), 1) * Zmin]) ./ ([ones(size(x, 1), 1) * Zmax] - [ones(size(x, 1), 1) * Zmin]);
 % x_test = data(LengthOfTimeSeries + 1:LengthOfTimeSeries + PredictHorizon);
 
 X = []; y = []; k = 0; loop = 1;
 while loop
     k = k + 1;
-    X = [X; x(k+0:k+NumberOfInputs-1)];
-    y = [y; x(k+NumberOfInputs)];
+    X = [X; data(k+0:k+NumberOfInputs-1)];
+    y = [y; data(k+NumberOfInputs)];
     if k+NumberOfInputs >= LengthOfTimeSeries; loop = 0; end
 end
 
@@ -54,10 +55,10 @@ num_trdata = size(train_in, 1);
 num_valdata = size(val_in, 1);
 
 
-hidden_units = 10;
+hidden_units = 180;
 d = 1;
 q = 1;
-tau = 4; % tBPTT constant for unfolding
+tau = 10; % tBPTT constant for unfolding
 
 learning_rate = 0.001;
 
@@ -67,17 +68,19 @@ Wih = rand(hidden_units,d);
 Who = rand(q,hidden_units);
 
 MAX_epoch = 5000;
-stop_condition = 1e-4;
+stop_condition = 1e-7;
 
 mse_val_prev = Inf;
 
-ht = zeros(hidden_units, 1);
+
 epoch = 0;
 Wih_saved = [];
 Whh_saved = [];
 Who_saved = [];
+ht = zeros(hidden_units, 1);
 
-while epoch < MAX_epoch
+while epoch < 5000
+    
     o_val = [];
     zt_val = [];
     o = [];
@@ -86,28 +89,33 @@ while epoch < MAX_epoch
     Whh_saved = Whh;
     Who_saved = Who;
     count = 0;
-    for K = 1:num_trdata-1
+    
+    for K = 1:num_trdata  % BU VANISHING GRADIENT E YOL ACIYOR!!!!!!!!!!!!
 
         [o, ht, zt] = forward(train_in, Wih, Whh, Who, ht, zt, o, K); 
-                   
-        [dWih, dWhh, dWho, del_t] = bptt(Wih, Whh, Who, ht, zt, o, train_out, train_in, K);
-
+        [dWih, dWhh, dWho, del_t] = bptt(Wih, Whh, Who, ht, zt, o, train_out, train_in, tau, K);
         [Wih, Whh, Who] = gradDes(Wih, Whh, Who, dWih, dWhh, dWho, learning_rate);
-
-        [o_val ht_val, zt_val] = forward(val_in, Wih, Whh, Who, ht, zt_val, o_val, K);
-        
+       
     end
-    
-    
-    
 
-    mse_train = sum((o - train_out(1:K)).^2) / K;
-    disp(mse_train)
-    mse_val = sum((o_val - val_out(1:K)).^2) / K;
-    disp(mse_val)
-    ht = ht(:, end);
+
+    for K = 1:num_valdata
+        [o_val ht_val, zt_val] = forward(val_in, Wih, Whh, Who, ht, zt_val, o_val, K);
+    end
+    o_best = o;
+ 
+
+
+    mse_train = sum((o - train_out).^2) / length(o);
+    mse_val = sum((o_val - val_out).^2) / length(o);
+    fprintf("MSE TRAINING: %f  MSE VALIDATION: %f \n", mse_train, mse_val);
+    figure(1)
+    plot(o_best)
+    hold on
+    plot(train_out)
+    hold off
     
-    if mse_val > mse_val_prev
+    if mse_val > mse_val_prev || isnan(mse_val)
         count = 0;
         learning_rate = learning_rate/2;
         disp('1')
@@ -117,15 +125,16 @@ while epoch < MAX_epoch
 
 
     else
+        
         count = count + 1;
         epoch = epoch + 1;
         disp('2')
     end
     
-    if  epoch == MAX_epoch
+    if  epoch == MAX_epoch || count == 10
         disp('3')
         epoch = MAX_epoch;
-        ht = ht(:,end);
+
         zt_test = [];
         o_test = [];
         for Step = 1:length(x_test)
