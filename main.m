@@ -8,7 +8,12 @@ clc;
 
 %THE PROBLEM IS THE VANISHING GRADIENT!
 
-%x_test_in ve x_test_out halledilicek.
+%%      TO DO
+%       Cross Val
+%       Training ve Val err graph.
+%       Get predictions.
+%       Aciklayici yorumlar.
+%       Batch learning?
 
 
 % t = [1:0.1:100];
