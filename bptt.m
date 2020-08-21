@@ -1,13 +1,13 @@
-function [dWih, dWhh, dWho, del_t] = bptt(Wih, Whh, Who, ht, zt, o, train_out, train_in, tau,K)
+function [dWih, dWhh, dWho, del_t] = bptt(Wih, Whh, Who, ht, zt, o, train_out, train_in, tau, T)
     
-    e_t = 2*(o - train_out(1:K));
+    e_t = (o - train_out(1:T));
     % e_t = 2*((o-train_out(1:K)).*dsigmoid(o));
     del_t = []; %columns are t backwards through time.
     ind = 0;
     dWih = 0;
-    dWhh = 0; 
+    dWhh = 0;
     dWho = 0;
-    t = K;  
+    t = T;  
     % if K < tau
     %     stop_cond = 0;
     % else
@@ -16,7 +16,7 @@ function [dWih, dWhh, dWho, del_t] = bptt(Wih, Whh, Who, ht, zt, o, train_out, t
     while t > 0
        
 
-        if t == K 
+        if t == T 
             del_t = [del_t, Who'* e_t(t) .* dtanh(zt(:,t))];
             
         else
@@ -24,6 +24,7 @@ function [dWih, dWhh, dWho, del_t] = bptt(Wih, Whh, Who, ht, zt, o, train_out, t
            
         end
         ind = ind + 1;
+        
         dWih = dWih + del_t(:, ind) * train_in(t);
 
         dWhh = dWhh + del_t(:, ind) * ht(:, t)';
