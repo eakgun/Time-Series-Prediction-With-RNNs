@@ -1,6 +1,6 @@
 # A Study of Vanilla RNNs
 This project is the first part of my undergraduate thesis. The complete model has been created and coded without using any library or data pre-processing tool.
-Main objective is prediction of the henon chaotic time series in future.
+Main objective is the prediction of the henon chaotic time series in future.
 
 bptt.m - Back Propagation Through Time
 
