@@ -1,4 +1,4 @@
-# A Study of Vanilla RNNs
+# A Study of Vanilla RNN
 This project is the first part of my undergraduate thesis. The complete model has been created and coded without using any library or data pre-processing tool.
 Main objective is the prediction of the henon chaotic time series in future.
 
