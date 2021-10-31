@@ -1,5 +1,5 @@
-# A Study of Vanilla RNN
-This project is the first part of my undergraduate thesis. The complete model has been created and coded without using any library or data pre-processing tool.
+# Generalized Implementation of RNNs for Chaotic Time Series Prediction
+The complete model has been created and coded without using any library or data pre-processing tool.
 Main objective is the prediction of the henon chaotic time series in future.
 
 bptt.m - Back Propagation Through Time
